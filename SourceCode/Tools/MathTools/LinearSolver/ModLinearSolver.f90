@@ -11,9 +11,11 @@ module LinearSolver
         contains
             ! Class Methods
             !----------------------------------------------------------------------------------
-            procedure  , private  :: SolveSparse => SolveSparse
-            procedure  , private  :: SolveFull => SolveFull
-            generic   :: Solve => SolveSparse,SolveFull
+            ! Note: The Solve* methods MUST be public in order to the generic to work with
+            ! inheritance. Do **NOT** use private modifier for those members!
+            procedure :: SolveSparse => SolveSparse
+            procedure :: SolveFull => SolveFull
+            generic   :: Solve => SolveSparse, SolveFull
             procedure (ReadParameters) , deferred :: ReadSolverParameters
 
     end type
