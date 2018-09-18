@@ -23,9 +23,7 @@ subroutine TangentStiffnessMatrix( AnalysisSettings , ElementList , Kg )
     use GlobalSparseMatrix
     use Timer
 
-
     implicit none
-
 
     ! Input variables
     ! -----------------------------------------------------------------------------------
@@ -45,39 +43,24 @@ subroutine TangentStiffnessMatrix( AnalysisSettings , ElementList , Kg )
     !************************************************************************************
     ! GLOBAL TANGENT STIFFNESS MATRIX
     !************************************************************************************
-
-    
     Kg%Val = 0.0d0
 
-    
- 
+    !$OMP PARALLEL DEFAULT(PRIVATE) SHARED(Kg, ElementList, AnalysisSettings)
+    !$OMP DO
     do  e = 1, size( ElementList )
-
- 
-        
         call ElementList(e)%El%GetElementNumberDOF( AnalysisSettings , nDOFel )
 
         Ke => Ke_Memory( 1:nDOFel , 1:nDOFel )
         GM => GM_Memory( 1:nDOFel )
 
         call ElementList(e)%El%GetGlobalMapping( AnalysisSettings, GM )
-
-             
         call ElementList(e)%El%ElementStiffnessMatrix( Ke, AnalysisSettings )
-
- !call tempo%Start 
-  
-        !call AssembleGlobalMatrix( GM, Ke, Kg )
+        !$OMP CRITICAL
         call AssembleGlobalMatrixUpperTriangular( GM, Ke, Kg )
-
-  !call tempo%Stop
-
+        !$OMP END CRITICAL
     enddo
-    
-
+    !$OMP END DO
+    !$OMP END PARALLEL
 
     !************************************************************************************
-
-
-    
 end subroutine

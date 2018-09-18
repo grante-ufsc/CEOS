@@ -48,20 +48,18 @@ subroutine SolveConstitutiveModel( ElementList , AnalysisSettings, Time, U, Stat
     ! SOLVING THE GLOBAL CONSTITUTIVE MODEL
     !************************************************************************************
 
-
-    ! Loop over the elements
+    !$OMP PARALLEL DEFAULT(PRIVATE) FIRSTPRIVATE(Status) SHARED(ElementList, AnalysisSettings, U, Time)
+    !$OMP DO
     do e = 1 , size(ElementList)
-
         call ElementList(e)%El%GetElementNumberDOF(AnalysisSettings , nDOFel)
         GM => GM_Memory( 1:nDOFel )
-
         call ElementList(e)%El%GetGaussPoints(NaturalCoord,Weight)
-
         call ElementList(e)%El%GetGlobalMapping(AnalysisSettings,GM)
-
         call ElementList(e)%El%ElementVolume(AnalysisSettings,Volume,VolumeX, Status)
 
-        if (Status%Error) return
+        if (Status%Error) then
+           stop "Error computing the element's volume in the constitutive model" 
+        endif
 
         ! Armazendo o volume de cada elemento
         ElementList(e)%El%Volume  = Volume
@@ -69,29 +67,20 @@ subroutine SolveConstitutiveModel( ElementList , AnalysisSettings, Time, U, Stat
 
         ! Loop over the Gauss Points
         do gp = 1 , size(ElementList(e)%El%GaussPoints)
-
             call ElementList(e)%El%DeformationGradient( NaturalCoord(gp,:) , U(GM) , &
                                                         AnalysisSettings , F, Status )
-
             ElementList(e)%El%GaussPoints(gp)%F = F
-
 
             ! AdditionalVariables
             !----------------------------------------------------------------------------
             ElementList(e)%El%GaussPoints(gp)%AdditionalVariables%Jbar = Volume/VolumeX
             !----------------------------------------------------------------------------
-
-
             ElementList(e)%El%GaussPoints(gp)%Time = Time
-
             call ElementList(e)%El%GaussPoints(gp)%UpdateStressAndStateVariables(Status)
-
         enddo
-
     enddo
-
-
-
+    !$OMP END DO
+    !$OMP END PARALLEL
 
 end subroutine
 
