@@ -53,7 +53,11 @@ module PardisoSolver
 		! Class Attributes
 		!----------------------------------------------------------------------------------------
         ! TODO (Jan#1#12/02/15): Estes atributos precisam ser ponteiros? Talvez allocatable seja suficiente
-        integer , pointer , dimension(:) :: pt=>null() , iparm=>null() , perm=>null()
+        ! Note: It SEEMS to be safe to declare 'pt' as a integer(8) on both 32 and 64bits machine,
+        !       since on 32bits machines it'll just be "under-used". This decision is based on
+        !       PARDISO Manual's implementation.
+        integer(8) , pointer , dimension(:) :: pt=>null()
+        integer , pointer , dimension(:) :: iparm=>null() , perm=>null()
         integer ::  maxfct, mnum, mtype, phase, n, nrhs, error , MSGLVL
 
         contains
