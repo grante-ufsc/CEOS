@@ -44,27 +44,27 @@ subroutine InternalForce( ElementList, AnalysisSettings, Fint, Status )
     !************************************************************************************
     ! ASSEMBLING THE INTERNAL FORCE
     !************************************************************************************
-
-    Fint=0.0d0
-
-     do  e = 1, size( ElementList )
-
-        call ElementList(e)%El%GetElementNumberDOF(AnalysisSettings , nDOFel)
-
-        Fe => Fe_Memory( 1:nDOFel )
-        GM => GM_Memory( 1:nDOFel )
-
-        call ElementList(e)%El%GetGlobalMapping(AnalysisSettings,GM)
-
+    Fint = 0.0d0
+    !$OMP PARALLEL DEFAULT(PRIVATE) FIRSTPRIVATE(Status) SHARED(AnalysisSettings, ElementList, Fint)
+    !$OMP DO
+    do e = 1, size(ElementList)
+        call ElementList(e)%El%GetElementNumberDOF(AnalysisSettings, nDOFel)
+        Fe => Fe_Memory(1:nDOFel)
+        GM => GM_Memory(1:nDOFel)
+        call ElementList(e)%El%GetGlobalMapping(AnalysisSettings, GM)
         call ElementList(e)%El%ElementInternalForce(AnalysisSettings, Fe, Status)
 
         if (Status%Error) then
-            return
+            stop "Error computing the element's Internal Force"
         endif
 
+        !$OMP CRITICAL
         Fint(GM) = Fint(GM) + Fe
-
+        !$OMP END CRITICAL
     enddo
+    !$OMP END DO
+    !$OMP END PARALLEL
+
 
     !************************************************************************************
 
