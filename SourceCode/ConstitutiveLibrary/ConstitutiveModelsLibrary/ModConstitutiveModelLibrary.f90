@@ -31,6 +31,9 @@ module ConstitutiveModelLibrary
     use ModViscoelasticFiber
     use ModViscoelasticMatrix
     use ModViscoelasticMatrixFiber
+    use ModGlassy
+    use ModVVHW
+    use ModVarViscoHydrolysis
 
     ! Constitutive Models ID registered:
     type ClassConstitutiveModels
@@ -47,6 +50,10 @@ module ConstitutiveModelLibrary
         integer   :: ViscoelasticFiberModel         = 11
         integer   :: ViscoelasticMatrixModel        = 12
         integer   :: ViscoelasticMatrixFiberModel   = 13
+        integer   :: VVHW                           = 14
+        integer   :: Glassy                         = 15
+        integer   :: VarViscoHydrolysisModel        = 16
+        
     end type
 
 	!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -114,6 +121,16 @@ module ConstitutiveModelLibrary
             type(ClassViscoelasticMatrix_3D)           , pointer , dimension(:) :: ViscoMatrix_3D
 
             type(ClassViscoelasticMatrixFiber_3D)      , pointer , dimension(:) :: ViscoMatrixFiber_3D
+            
+            type(ClassVarViscoHydrolysis_3D)  , pointer , dimension(:) :: VARVISHYDR_3D
+            type(ClassVarViscoHydrolysis_AXI)  , pointer , dimension(:) :: VARVISHYDR_AXI
+            
+            type(ClassVVHW_3D)  , pointer , dimension(:) :: VVHW_3D
+            type(ClassVVHW_AXI)  , pointer , dimension(:) :: VVHW_AXI
+            
+            type(ClassGlassy_3D)  , pointer , dimension(:) :: Glassy_3D
+            type(ClassGlassy_AXI)  , pointer , dimension(:) :: Glassy_AXI
+            
 ! TODO (Thiago#1#02/13/15): Trocar threeDimensional para 3D
 
 		    !************************************************************************************
@@ -373,6 +390,69 @@ module ConstitutiveModelLibrary
                     endif
                 ! -------------------------------------------------------------------------------
 
+                ! -------------------------------------------------------------------------------
+                ! Modelo Variacional Viscoplastico com Danificacao Plastica e Hidrolitica
+                ! -------------------------------------------------------------------------------
+                case (ConstitutiveModels % VarViscoHydrolysisModel)
+                
+                
+                if ( AnalysisSettings%Hypothesis == HypothesisOfAnalysis%ThreeDimensional ) then
+                    
+                    allocate(VARVISHYDR_3D(nGP) )
+                    GaussPoints => VARVISHYDR_3D
+                
+                elseif ( AnalysisSettings%Hypothesis == HypothesisOfAnalysis%Axisymmetric ) then
+                   
+                    allocate(VARVISHYDR_AXI(nGP))
+                    GaussPoints => VARVISHYDR_AXI
+                    
+                else
+                    
+                    call Error("Error: Visco Hydrolitic Model analysis type not available.")
+
+                endif
+                
+                ! -------------------------------------------------------------------------------
+                ! Modelo Variacional Viscoplastico com Danificacao Plastica e Hidrolitica
+                ! -------------------------------------------------------------------------------
+                case (ConstitutiveModels % VVHW)
+                
+                
+                if ( AnalysisSettings%Hypothesis == HypothesisOfAnalysis%ThreeDimensional ) then
+                    
+                    allocate(VVHW_3D(nGP) )
+                    GaussPoints => VVHW_3D
+                
+                elseif ( AnalysisSettings%Hypothesis == HypothesisOfAnalysis%Axisymmetric ) then
+                   
+                    allocate(VVHW_AXI(nGP))
+                    GaussPoints => VVHW_AXI
+                    
+                 endif
+                ! -------------------------------------------------------------------------------
+                ! Modelo Jan - Sem parte termica @Wagner
+                ! -------------------------------------------------------------------------------
+                case (ConstitutiveModels % Glassy)
+                
+                
+                if ( AnalysisSettings%Hypothesis == HypothesisOfAnalysis%ThreeDimensional ) then
+                    
+                    allocate(Glassy_3D(nGP) )
+                    GaussPoints => Glassy_3D
+                
+                elseif ( AnalysisSettings%Hypothesis == HypothesisOfAnalysis%Axisymmetric ) then
+                   
+                    allocate(Glassy_AXI(nGP))
+                    GaussPoints => Glassy_AXI
+                    
+                else
+                    
+                    call Error("Error: Glassy Model analysis type not available.")
+
+                endif                    
+                    
+                ! -------------------------------------------------------------------------------
+                
                 case default
 
                     call Error( "Error: Constitutive Model not registered.")
@@ -482,6 +562,18 @@ module ConstitutiveModelLibrary
 
                 modelID = ConstitutiveModels%ViscoelasticMatrixFiberModel
 
+            elseif ( Comp%CompareStrings('VarViscoHydrolysisModel', model).and. (AnalysisSettings%ElementTech == ElementTechnologies%Full_Integration) ) then
+            
+                modelID = ConstitutiveModels % VVHW
+            elseif ( Comp%CompareStrings('VVHW', model).and. (AnalysisSettings%ElementTech == ElementTechnologies%Full_Integration) ) then
+            
+                modelID = ConstitutiveModels % VVHW
+                
+            elseif ( Comp%CompareStrings('ViscoElasticoJan', model).and. (AnalysisSettings%ElementTech == ElementTechnologies%Full_Integration) ) then
+            
+                modelID = ConstitutiveModels % Glassy   
+
+            ! -----------------------------------------------------------------------------------    
             else
 
                 call Error( "Error: Material Model not identified: "//trim(model))
