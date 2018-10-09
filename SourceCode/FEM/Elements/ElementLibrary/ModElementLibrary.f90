@@ -23,6 +23,7 @@ module ElementLibrary
     use ElementTetra4
     use ElementHexa8
     use ElementTetra10
+    use ElementQuad8
 
 
     ! Elements ID used in the code: [Geometry][InterpolationDegree][ElementTechnology]
@@ -33,7 +34,7 @@ module ElementLibrary
 	! ------------------------------------------------------------------------------------------
 	type ClassElementTypes
         integer :: Tri3   = 110	, Tri6	  = 120
-        integer :: Quad4  = 210	, Quad9   = 220
+        integer :: Quad4  = 210	, Quad8 = 220
         integer :: Tetra4 = 310 , Tetra10 = 320
         integer :: Hexa8  = 410 , Hexa27  = 420
     end type
@@ -73,10 +74,11 @@ module ElementLibrary
             ! -----------------------------------------------------------------------------------
 			type(ClassElementTri3)    , pointer :: ElTri3     => null()
             type(ClassElementQuad4)   , pointer :: ElQuad4    => null()
+            type(ClassElementQuad8)   , pointer :: ElQuad8    => null()
             type(ClassElementTetra4)  , pointer :: ElTetra4   => null()
             type(ClassElementHexa8)   , pointer :: ElHexa8    => null()
             type(ClassElementTetra10) , pointer :: ElTetra10  => null()
-
+            
 		    !************************************************************************************
 
 		    !************************************************************************************
@@ -94,6 +96,11 @@ module ElementLibrary
 
                     allocate(ElQuad4)
                     Element => ElQuad4
+                    
+                case (ElementTypes % Quad8)
+
+                    allocate(ElQuad8)
+                    Element => ElQuad8    
 
                 case (ElementTypes % Tetra4)
 
@@ -254,17 +261,19 @@ LOOP:      do el = 1 , size(AvailableElements)
         integer::NumberOfAvailableElements
         type(ClassElementTri3)    :: ElTri3
         type(ClassElementQuad4)   :: ElQuad4
+        type(ClassElementQuad8)   :: ElQuad8
         type(ClassElementTetra4)  :: ElTetra4
         type(ClassElementHexa8)   :: ElHexa8
         type(ClassElementTetra10) :: ElTetra10
 
-        NumberOfAvailableElements = 5
+        NumberOfAvailableElements = 6
 
         if (allocated(AvailableElements)) deallocate(AvailableElements)
         allocate( AvailableElements(NumberOfAvailableElements))
 
         call ElTri3  %GetProfile(AvailableElements(1)) ; AvailableElements(1)%ElementType = ElementTypes % Tri3
         call ElQuad4 %GetProfile(AvailableElements(2)) ; AvailableElements(2)%ElementType = ElementTypes % Quad4
+        call ElQuad8 %GetProfile(AvailableElements(6)) ; AvailableElements(6)%ElementType = ElementTypes % Quad8
         call ElTetra4%GetProfile(AvailableElements(3)) ; AvailableElements(3)%ElementType = ElementTypes % Tetra4
         call ElHexa8 %GetProfile(AvailableElements(4)) ; AvailableElements(4)%ElementType = ElementTypes % Hexa8
         call ElTetra10%GetProfile(AvailableElements(5)) ; AvailableElements(5)%ElementType = ElementTypes % Tetra10

@@ -115,7 +115,7 @@ module ModHyperView
                     ngp = size(FEA%ElementList(1)%el%GaussPoints)
                     nnodes = size(FEA%ElementList(1)%El%ElementNodes)
                     allocate( GaussPointlValues( nelem , ngp , 6 ) )
-                    allocate( Conec(nelem , nnodes ) )
+                    allocate( Conec(nelem , ngp ) )
 
                     do e=1,nelem
                         do gp=1,ngp

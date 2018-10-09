@@ -685,6 +685,12 @@ contains
                             ! NOTE (Thiago#1#): Ansys não tem elemento com 3 nós. Implementação para ler malha do ansys modificada manualmente para Tri3
                             ndime = 2
                             ElemType = ElementTypes%Tri3
+                        
+                         case (82) ! Ansys Element 82 - Quad 8
+                            ndime = 2
+                            ElemType = ElementTypes%Quad8       
+                            
+                            
                         case (92) ! Ansys Element 92 - Tetra10
                             ndime = 3
                             ElemType = ElementTypes%Tetra10
@@ -776,7 +782,15 @@ contains
                                 ElemConec(4-i) = AuxString(11+i)
                             enddo
 
+                        else if (ElemType == ElementTypes%Quad8) then
+                        
+                            do i = 1,ENnodes
+                                ElemConec(i) = AuxString(11+i)
+                            enddo
+      
                         endif
+                        
+                        
 
                         call ElementConstructor( ElementList(ElemID)%el , ElemConec(1:ENnodes) ,ElemType , GlobalNodesList)
 
