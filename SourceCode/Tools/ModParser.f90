@@ -146,7 +146,7 @@ module Parser
         !ERROR HANDLER
         994 call this%RaiseError("ClassParser :: Setup :: FileNumber not opened.")
         995 call this%RaiseError("ClassParser :: Setup :: Must inform FileName,FileNumber, or both")
-        996 call this%RaiseError("ClassParser :: Setup :: File does not exist.")
+        996 call this%RaiseError("ClassParser :: Setup :: File does not exist: " // this%FileName)
         997 call this%RaiseError("ClassParser :: Setup :: FileNumber already opened.")
         998 call this%RaiseError("ClassParser :: Setup :: A Free FileNumber could not be found.")
         999 call this%RaiseError("ClassParser :: Setup :: Error opening the file. Check ErrorID.",status)
