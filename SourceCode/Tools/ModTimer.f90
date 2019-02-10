@@ -12,7 +12,7 @@ module Timer
     contains
 
     subroutine StartTime(this)
-        use dfport
+        use ifport
         !include 'mkl.fi'
         class(ClassTimer)::this
         !this%Time = dsecnd()
@@ -20,7 +20,7 @@ module Timer
     end subroutine
 
     subroutine StopTime(this)
-        use dfport
+        use ifport
         !include 'mkl.fi'
         class(classtimer)::this
         !this%time =  dsecnd() - this%time

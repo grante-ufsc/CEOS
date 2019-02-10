@@ -13,3 +13,8 @@ NumberOfIterationsToConverge.dat
 Log_CEOS.txt
 Log_CEOS_CHECKER.txt
 *.hwascii
+*.mod
+*.o
+/linux/ceos
+*.swp
+

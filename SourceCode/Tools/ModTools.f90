@@ -4,7 +4,7 @@ module ModTools
 
     subroutine GetArgs(Args,Show)
 
-        use dflib
+        use ifport
         implicit none
         character(len=*),dimension(:), allocatable :: Args
         logical,optional::Show

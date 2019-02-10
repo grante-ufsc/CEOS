@@ -536,7 +536,7 @@ contains
         type (ClassParser)                                            :: DataMeshBC
 
         character(len=100),dimension(3) :: ListOfOptions,ListOfValues
-        character(len=100)              :: TimeFileName
+        character(len=100)              :: TimeFileName, MeshFileName
         logical,dimension(3)            :: FoundOption
         integer                         :: i,j,PreProcessorID, FileNumber
 
@@ -581,41 +581,29 @@ contains
         ENDIF
 
         select case (PreProcessorID)
-
             case (PreProcessors%Gid12,PreProcessors%Gid7)
-
                 call DataMeshBC%Setup(FileName=ListOfValues(1),FileNumber=43)
-
                 call ReadMeshGiD(DataMeshBC,GlobalNodesList,ElementList,AnalysisSettings,MaterialList, PreProcessorID)
-
                 call ReadBoundaryConditionsGiD(TimeFileName,DataMeshBC,BC,AnalysisSettings)
-
                 call DataMeshBC%CloseFile
-
-
-
             case (PreProcessors%HyperMesh)
-
-                FileNumber = FreeFile()
-                open(FileNumber,File=ListOfValues(1),status='unknown')
+		   	    MeshFileName = ListOfValues(1)
+			    FileNumber = FreeFile()
+			    open(FileNumber, err=900, File=trim(MeshFileName), status='unknown')
                 call ReadMeshHyperMesh(FileNumber,GlobalNodesList,ElementList,AnalysisSettings,MaterialList, PreProcessorID)
-
                 call ReadBoundaryConditionsHyperMesh(TimeFileName,FileNumber,BC,AnalysisSettings)
-
             case default
-
         end select
 
-
-       call DataFile%GetNextString(string)
+        call DataFile%GetNextString(string)
 
         IF (.not.DataFile%CompareStrings(string,'end'//trim(BlockName(iMeshAndBC)))) then
             call DataFile%RaiseError("End of block was expected. BlockName="//trim(BlockName(iMeshAndBC)))
         endif
 
         BlockFound(iMeshAndBC)=.true.
-
-
+		return
+900		call DataFile%RaiseError("Could not open file '" // trim(MeshFileName) // "'")
     end subroutine
     !=======================================================================================================================
 
