@@ -18,3 +18,4 @@ Log_CEOS_CHECKER.txt
 /linux/ceos
 *.swp
 
+/Debug_Intel64/
