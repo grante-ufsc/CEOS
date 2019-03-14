@@ -31,6 +31,7 @@ module ConstitutiveModelLibrary
     use ModViscoelasticFiber
     use ModViscoelasticMatrix
     use ModViscoelasticMatrixFiber
+    use ModGlassy_W
     use ModGlassy
     use ModVVHW
     use ModVarViscoHydrolysis
@@ -51,8 +52,9 @@ module ConstitutiveModelLibrary
         integer   :: ViscoelasticMatrixModel        = 12
         integer   :: ViscoelasticMatrixFiberModel   = 13
         integer   :: VVHW                           = 14
-        integer   :: Glassy                         = 15
+        integer   :: Glassy_W                       = 15
         integer   :: VarViscoHydrolysisModel        = 16
+        integer   :: Glassy                         = 17
         
     end type
 
@@ -130,6 +132,9 @@ module ConstitutiveModelLibrary
             
             type(ClassGlassy_3D)  , pointer , dimension(:) :: Glassy_3D
             type(ClassGlassy_AXI)  , pointer , dimension(:) :: Glassy_AXI
+            
+            type(ClassGlassy_W_3D)  , pointer , dimension(:) :: Glassy_W_3D
+            type(ClassGlassy_W_AXI)  , pointer , dimension(:) :: Glassy_W_AXI
             
 ! TODO (Thiago#1#02/13/15): Trocar threeDimensional para 3D
 
@@ -452,6 +457,33 @@ module ConstitutiveModelLibrary
                 endif                    
                     
                 ! -------------------------------------------------------------------------------
+                ! -------------------------------------------------------------------------------
+                ! Modelo Jan - modificaado - Sem parte termica @Wagner
+                ! -------------------------------------------------------------------------------
+                case (ConstitutiveModels % Glassy_W)
+                
+                
+                if ( AnalysisSettings%Hypothesis == HypothesisOfAnalysis%ThreeDimensional ) then
+                    
+                    allocate(Glassy_W_3D(nGP) )
+                    GaussPoints => Glassy_W_3D
+                
+                elseif ( AnalysisSettings%Hypothesis == HypothesisOfAnalysis%Axisymmetric ) then
+                   
+                    allocate(Glassy_W_AXI(nGP))
+                    GaussPoints => Glassy_W_AXI
+                    
+                else
+                    
+                    call Error("Error: Glassy Model analysis type not available.")
+
+                endif                    
+                    
+                ! -------------------------------------------------------------------------------
+                
+                
+                
+                
                 
                 case default
 
@@ -571,6 +603,8 @@ module ConstitutiveModelLibrary
                 
             elseif ( Comp%CompareStrings('ViscoElasticoJan', model).and. (AnalysisSettings%ElementTech == ElementTechnologies%Full_Integration) ) then
             
+                modelID = ConstitutiveModels % Glassy   
+            elseif ( Comp%CompareStrings('ViscoElasticoJan_True', model).and. (AnalysisSettings%ElementTech == ElementTechnologies%Full_Integration) ) then
                 modelID = ConstitutiveModels % Glassy   
 
             ! -----------------------------------------------------------------------------------    

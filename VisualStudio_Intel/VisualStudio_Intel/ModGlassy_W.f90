@@ -10,7 +10,7 @@
 ! Remarks:
 
 !##################################################################################################
-module ModGlassy
+module ModGlassy_W
 
 	!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 	! DECLARATIONS OF VARIABLES
@@ -28,13 +28,11 @@ module ModGlassy
  	!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     ! Class"NameOfTheMaterialModel": Attributes and methods of the constitutive model
 	!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    type GlassyProperties
+    type GlassyProperties_W
 
         ! Variables of material parameters
         !----------------------------------------------------------------------------------------------
-    real *8 :: G , K , mu , lambda , m 
-    real(8) :: s0, scv, sg, sz, sb
-    !real *8 :: S_0 , S_inf , S_zeta, S_narrow
+    real *8 :: G , K , mu , lambda , m , S_0 , S_inf , S_zeta, S_narrow
 
     end type
 	!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -43,11 +41,11 @@ module ModGlassy
 	!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     ! Class"NameOfTheMaterialModel": Attributes and methods of the constitutive model
 	!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    type , extends(ClassConstitutiveModel) :: classGlassy
+    type , extends(ClassConstitutiveModel) :: classGlassy_W
 
 		! Class Attributes : Usually the state variables (instant and internal variables)
 		!----------------------------------------------------------------------------------------
-         type (GlassyProperties), pointer :: Properties => null()
+         type (GlassyProperties_W), pointer :: Properties => null()
 
         !----------------------------------------------------------------------------------------
         ! State Variables
@@ -95,7 +93,7 @@ module ModGlassy
     ! Class"NameOfTheMaterialModel"_PlaneStrain: Attributes and methods of the constitutive model
     ! in Three-Dimensional analysis.
 	!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    type , extends(ClassGlassy) :: ClassGlassy_3D
+    type , extends(ClassGlassy_W) :: ClassGlassy_W_3D
 
          contains
             ! Class Methods
@@ -110,7 +108,7 @@ module ModGlassy
          
 	!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     
-    type , extends(ClassGlassy_3D) :: ClassGlassy_AXI
+    type , extends(ClassGlassy_W_3D) :: ClassGlassy_W_AXI
     
     contains
     ! Class Methods
@@ -143,7 +141,7 @@ module ModGlassy
 
             ! Object
             ! -----------------------------------------------------------------------------------
-            class(ClassGlassy) :: this
+            class(ClassGlassy_W) :: this
 
             ! Input variables
             ! -----------------------------------------------------------------------------------
@@ -182,7 +180,7 @@ module ModGlassy
 
             ! Object
             ! -----------------------------------------------------------------------------------
-            class(ClassGlassy) :: this
+            class(ClassGlassy_W) :: this
 
             ! Input variables
             ! -----------------------------------------------------------------------------------
@@ -215,7 +213,7 @@ module ModGlassy
 		    !************************************************************************************
             ! Object
             ! ---------------------------------------------------------------------------------
-            class(ClassGlassy) :: this
+            class(ClassGlassy_W) :: this
 
             ! Input variables
             ! ---------------------------------------------------------------------------------
@@ -223,8 +221,8 @@ module ModGlassy
               type(ClassParser)::DataFile
 
 		    !************************************************************************************
-		    character(len=100),dimension(10)::ListOfOptions,ListOfValues
-		    logical,dimension(10)::FoundOption
+		    character(len=100),dimension(9)::ListOfOptions,ListOfValues
+		    logical,dimension(9)::FoundOption
 		    integer::i
 
             !************************************************************************************
@@ -232,7 +230,7 @@ module ModGlassy
 		    !************************************************************************************
             allocate (this%Properties)
 
-            ListOfOptions=["G","K","mu","lambda","m","S0","Scv","Sg","Sz","sb"] 
+            ListOfOptions=["G","K","mu","lambda","m","S_0","S_inf","S_zeta","S_narrow"] 
             call DataFile%FillListOfOptions(ListOfOptions,ListOfValues,FoundOption)
             call DataFile%CheckError
             do i=1,size(FoundOption)
@@ -252,15 +250,13 @@ module ModGlassy
             
             this%Properties%m = ListOfValues(5)
             
-            this%Properties%S0 = ListOfValues(6)
+            this%Properties%S_0 = ListOfValues(6)
             
-            this%Properties%Scv = ListOfValues(7)
+            this%Properties%S_inf = ListOfValues(7)
             
-            this%Properties%Sg = ListOfValues(8)
+            this%Properties%S_zeta = ListOfValues(8)
             
-            this%Properties%Sz = ListOfValues(9)
-            
-            this%Properties%Sz = ListOfValues(10)
+            this%Properties%S_narrow = ListOfValues(9)
             
             this%Properties%K =  calcbulk(this%Properties%G + this%Properties%mu )
 
@@ -278,12 +274,12 @@ module ModGlassy
         !==========================================================================================
         subroutine CopyProperties_Glassy(this,Reference)
 
-             class(ClassGlassy) :: this
+             class(ClassGlassy_W) :: this
              class(ClassConstitutiveModel) :: Reference
 
              select type ( Reference )
 
-                 class is ( ClassGlassy)
+                 class is ( ClassGlassy_W)
                     this%Properties => Reference%Properties
                  class default
                      stop "erro na subroutine CopyProperties_Glassy"
@@ -309,7 +305,7 @@ module ModGlassy
 		    !************************************************************************************
             ! Object
             ! ---------------------------------------------------------------------------------
-            class(ClassGlassy_3D) :: this
+            class(ClassGlassy_W_3D) :: this
             type(ClassStatus) :: Status
 
 
@@ -418,7 +414,7 @@ module ModGlassy
 		    !************************************************************************************
             ! Object
             ! ---------------------------------------------------------------------------------
-            class(ClassGlassy_AXI) :: this
+            class(ClassGlassy_W_AXI) :: this
             type(ClassStatus) :: Status
        
 
@@ -524,7 +520,7 @@ module ModGlassy
         
         subroutine GetTangentModulus_Glassy_AXI(this,D)
         
-            class(ClassGlassy_AXI) :: this
+            class(ClassGlassy_W_AXI) :: this
             type(ClassStatus) :: Status
             
             real(8),dimension(:,:),intent(inout):: D
@@ -604,7 +600,7 @@ module ModGlassy
         !==========================================================================================
         subroutine SwitchConvergedState_Glassy(this)
 
-            class(ClassGlassy) :: this
+            class(ClassGlassy_W) :: this
 
             this%OldFp = this%Fp
 
@@ -620,7 +616,7 @@ module ModGlassy
             use MathRoutines
             implicit none
 
-            class(ClassGlassy) :: this
+            class(ClassGlassy_W) :: this
             integer                   :: ID,Length,VariableType
             character(len=*)          :: Name
             real(8) , dimension(:)    :: Variable
@@ -726,7 +722,7 @@ module ModGlassy
            
         function avalia_eqfluxo(MatProperties,r_dot,NormLogStrain, dt, S_fluxo) result(Residuo)
         
-        type (GlassyProperties) :: MatProperties
+        type (GlassyProperties_W) :: MatProperties
         real*8 :: r_dot,dt,NormLogStrain, Residuo, G, m , S_fluxo
         
         G = MatProperties%G
@@ -740,20 +736,17 @@ module ModGlassy
         
         function Avalia_Sfluxo(MatProperties, accumulatedstrain ) result(S_fluxo)
         
-        type (GlassyProperties) :: MatProperties
+        type (GlassyProperties_W) :: MatProperties
         real *8 :: S_fluxo , accumulatedstrain
-        !real *8 :: S_inf,S_0,S_zeta, S_narrow
-        real(8) :: s0, scv, sg, sz, sb, R
+        real *8 :: S_inf,S_0,S_zeta, S_narrow
         
-        s0    = MatProperties%S0    ! MPa
-        scv   = MatProperties%Scv     ! MPa
-        sg    = MatProperties%Sg      !MPa
-        sz    = MatProperties%Sz         ![]
-        sb    = MatProperties%Sb        ![]
-
-        R = accumulatedstrain
-        
-        S_fluxo   = scv + exp(-sz*R) * ( (s0-scv) * cosh(sb*R) + sg * sinh(sb*R))
+        S_inf = MatProperties%S_inf
+        S_0 = MatProperties%S_0
+        S_zeta = MatProperties%S_zeta
+        S_narrow =  MatProperties%S_narrow
+       
+        S_fluxo = S_inf +   S_0  * S_narrow * accumulatedstrain * exp( - S_zeta * accumulatedstrain * S_narrow ); 
+       
         
         end function
            
@@ -761,7 +754,7 @@ module ModGlassy
         
         subroutine FlowByBissection(MatProperties, dt, NormLogStrain, S_fluxo, r_dot_result )
         
-        type (GlassyProperties) :: MatProperties
+        type (GlassyProperties_W) :: MatProperties
         real *8 :: tol , dt, NormLogStrain, S_fluxo
         real *8 :: r_dot_upper, r_dot_lower, r_dot_mean, r_dot_result
         real *8 :: Fluxo_Upper, Fluxo_Lower, Fluxo_mean

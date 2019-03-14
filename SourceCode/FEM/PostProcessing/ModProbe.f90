@@ -17,7 +17,7 @@ module ModProbe
     !Variable Names - Default variables and user defined variables
     type ClassVariableNames
         integer  :: Displacements=1 , Temperature=2, CauchyStress=3, LogarithmicStrain=4, &
-                    DeformationGradient=5 , FirstPiolaStress=6, UserDefined=7
+                    DeformationGradient=5 , FirstPiolaStress=6, UserDefined=7, Volume = 8
     end type
     type (ClassVariableNames), parameter :: VariableNames = ClassVariableNames()
 
@@ -61,6 +61,12 @@ module ModProbe
     contains
         procedure :: WriteProbeResult => WriteProbeResult_GaussPoint
     end type
+    
+    ! Structure
+    type, extends(ClassProbe) :: ClassStructureProbe
+    contains
+        procedure :: WriteProbeResult => WriteProbeResult_Structure
+    end type  
 
     ! Micro Structure
     type, extends(ClassProbe) :: ClassMicroStructureProbe
@@ -135,6 +141,8 @@ module ModProbe
             enu = VariableNames%Temperature
         ELSEIF ( Comp%CompareStrings( Variable,'First Piola Stress') ) then
             enu = VariableNames%FirstPiolaStress
+        ELSEIF ( Comp%CompareStrings( Variable,'Volume') ) then
+            enu = VariableNames%Volume
         ELSE
             enu = VariableNames%UserDefined
         ENDIF
@@ -562,7 +570,43 @@ module ModProbe
 
     end subroutine
     !==========================================================================================
+    
+    !==========================================================================================
+    subroutine StructureProbeConstructor (Probe, Variable, FileName, ComponentsString)
 
+            ! Modules and implicit declarations
+            ! -----------------------------------------------------------------------------------
+            use Parser
+            implicit none
+
+            ! Object
+            ! -----------------------------------------------------------------------------------
+            class(ClassProbe), pointer :: Probe
+
+            ! Input variables
+            ! -----------------------------------------------------------------------------------
+            character(len=*) :: Variable
+            character(len=*) :: FileName
+            character(len=*) :: ComponentsString
+
+            ! Internal variables
+            ! -----------------------------------------------------------------------------------
+            type(ClassParser) :: Comp
+            type(ClassStructureProbe), pointer :: StructureProbe
+            !************************************************************************************
+
+            call Comp%Setup()
+
+            allocate(StructureProbe)
+
+            StructureProbe%FileName       = FileName
+            StructureProbe%VariableName   = Variable
+            StructureProbe%VariableNameID = ParseVariableName(Variable)
+
+            Probe => StructureProbe
+
+    end subroutine
+    !==========================================================================================
 
     !==========================================================================================
     subroutine MicroStructureProbeConstructor (Probe, Variable, FileName, ComponentsString)
@@ -758,6 +802,102 @@ module ModProbe
             enddo
 
             call this%WriteOnFile( FEA%Time , TotalForce )
+
+    end subroutine
+    !==========================================================================================
+    !==========================================================================================
+    subroutine WriteProbeResult_Structure(this,FEA)
+
+            ! Modules and implicit declarations
+            ! -----------------------------------------------------------------------------------
+            use FEMAnalysis
+            use MathRoutines
+            use Parser
+            use ModContinuumMechanics
+            use ModStatus
+            !use ModMultiscaleAnalysis
+
+            implicit none
+
+            ! Object
+            ! -----------------------------------------------------------------------------------
+            class(ClassStructureProbe) :: this
+
+            ! Input variables
+            ! -----------------------------------------------------------------------------------
+            class(ClassFEMAnalysis) :: FEA
+
+            ! Internal variables
+            ! -----------------------------------------------------------------------------------
+            type (ClassParser) :: Comp
+
+            !real(8), dimension(size(this%Components)) , target :: ProbeVariable
+            integer :: FileNumber, i, NumberOfComp, NumberOfGaussPoint, NumberOfElements
+
+            !real(8) , dimension(FEA%AnalysisSettings%StrainSize) :: Strain_Voigt
+            !real(8) , dimension(FEA%AnalysisSettings%StressSize) :: HomogenizedStress
+            !real(8) , dimension(9) :: F_voigt
+           ! real(8) , dimension(3) :: eigenvalues
+            !real(8) , dimension(3,3) :: F, b, Log_Strain, eigenvectors, N
+
+            !real(8) , dimension(9)            :: UD_Variable
+            !integer                           :: UD_ID, UD_Length, UD_VariableType
+           ! character(len=255)                :: UD_Name
+            !logical :: FoundUserVariable
+            !class(ClassConstitutiveModel) , pointer :: GP
+            integer :: e
+            real(8) :: dummyVolume
+            real(8) :: dummyVolumeX
+            !real(8) :: StructureVolume
+            real(8) , dimension(1) ::  StructureVolume
+            
+           ! real(8)                                 :: HomogenizedF(3,3),HomogenizedF_voigt(9)
+            !real(8)                                 :: HomogenizedP(3,3),HomogenizedP_voigt(9)
+            !real(8)                                 :: HomogenizedCauchy(3,3)
+            !************************************************************************************
+            ! Teste se probe esta ativo
+            if (.not. this%Active) then
+                return
+            endif
+
+            call Comp%Setup()
+
+            select type (FEA)
+                class is (ClassFEMAnalysis)
+
+                    select case (this%VariableNameID)
+                        
+                       case (VariableNames%Volume) !%StructureVolume
+                            
+                            StructureVolume = 0.0d0
+                        
+                            !Loop over elements 
+                            do e=1,size( FEA%ElementList )
+                            
+                                !call FEA%ElementList(e)% El% Volume !ElementVolume(FEA%AnalysisSettings,dummyVolume,dummyVolumeX,Status)
+                            
+                                StructureVolume = StructureVolume  + FEA%ElementList(e)% El% Volume
+                            
+                            end do
+                        
+                            
+                                    !ProbeVariable = StructureVolume
+                            
+                                call this%WriteOnFile(FEA%Time , StructureVolume)
+                        
+                         case default
+                        
+                            stop 'Error in ModProbe - WriteProbeResult_Structure - VariableNameID - not identified'
+                        
+                    end select
+             
+
+                class default
+                    call this%WriteOnFile('Not a FEM analysis')
+                    this%Active = .false.
+
+
+            end select
 
     end subroutine
     !==========================================================================================
